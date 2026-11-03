@@ -284,9 +284,9 @@ export function mountHost(root) {
     const claims = game.claims || {};
     return h("div.list", SLOTS.map((s) => {
       const c = claims[s];
-      return h("div.list-item.static", { class: c ? "won" : "" },
-        h("span.li-title", SLOT_ICON[s], " ", SLOT_LABEL[s]),
-        h("span.li-sub", c ? `${c.name} · ${fmtTime(c.at)}` : "—"),
+      return h("div.list-item.static.claim-row", { class: c ? "won" : "" },
+        h("span.claim-slot", SLOT_ICON[s], " ", SLOT_LABEL[s]),
+        h("span.claim-who", c ? [h("b", c.name), h("small", fmtTime(c.at))] : "—"),
         c && h("button.btn.small.ghost", { onclick: () => showClaim(s, c) }, "Gör"),
         c && canRevoke && h("button.btn.small.ghost.danger", { onclick: () => revoke(s) }, "Geri al"));
     }));

@@ -4,7 +4,7 @@ import {
 } from "./firebase.js";
 import {
   generateCard, validateCustom, customsFilled, nextClaim, lockedRows, filledInRow,
-  cellLabel, COLS, MAX_CUSTOM_LEN, SLOTS,
+  cellLabel, rowOf, COLS, MAX_CUSTOM_LEN, SLOTS,
 } from "./card.js";
 import {
   h, mount, toast, vibrate, confirmSheet, promptSheet, showInfo, renderCard, claimBar,
@@ -126,7 +126,7 @@ export function mountPlayer(root, gid, { embedded = false } = {}) {
     try {
       const items = Object.entries(game.items || {}).map(([id, it]) => ({ id, ...it }));
       await set(ref(db, `${gpath}/players/${fid}`), {
-        name: game.roster[fid], joinedAt: serverTimestamp(), ready: false, card: generateCard(items),
+        name: game.roster[fid], joinedAt: serverTimestamp(), ready: false, card: generateCard(items, Math.random, game.meta.cols || COLS),
       });
     } finally {
       creating = false;
@@ -153,7 +153,7 @@ export function mountPlayer(root, gid, { embedded = false } = {}) {
     const marks = p.marks || {};
     const path = `${gpath}/players/${fid}/marks/${i}`;
     if (marks[i]) {
-      if (lockedRows(fid, game.claims).has(Math.floor(i / COLS))) {
+      if (lockedRows(fid, game.claims).has(rowOf(p.card, i))) {
         toast("Bu satır ilan edildi, geri alınamaz 🔒");
         return;
       }

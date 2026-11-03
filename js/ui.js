@@ -1,5 +1,5 @@
 // Small DOM helpers shared by the host and player screens.
-import { cellLabel, rowCells, hyphenateTr, COLS, ROWS } from "./card.js";
+import { cellLabel, rowCells, colsOf, hyphenateTr, ROWS } from "./card.js";
 
 // h("div.card#main", { onclick }, child, "text", [children])
 export function h(tag, attrs, ...children) {
@@ -67,8 +67,10 @@ export function toast(text, kind = "") {
   const t = h("div.toast", { class: kind }, text);
   box.append(t);
   while (box.children.length > 3) box.firstChild.remove();
-  setTimeout(() => t.classList.add("out"), 3600);
-  setTimeout(() => t.remove(), 4000);
+  // Announcements ("big") stay 4 s; small info messages get out of the way fast.
+  const ms = kind.includes("big") ? 4000 : 2200;
+  setTimeout(() => t.classList.add("out"), ms - 400);
+  setTimeout(() => t.remove(), ms);
 }
 
 // Bottom sheet modal. Resolves with the value passed to close().
@@ -86,11 +88,13 @@ export function sheet(build) {
     const close = (v) => {
       if (vv) { vv.removeEventListener("resize", fit); vv.removeEventListener("scroll", fit); }
       back.remove();
+      if (!document.querySelector(".backdrop")) document.body.classList.remove("sheet-open");
       resolve(v);
     };
     back.addEventListener("click", (e) => { if (e.target === back) close(null); });
     back.append(h("div.sheet", build(close)));
     document.body.append(back);
+    document.body.classList.add("sheet-open"); // toasts move to the top while a sheet is open
     if (vv) { vv.addEventListener("resize", fit); vv.addEventListener("scroll", fit); fit(); }
     const input = back.querySelector("input,textarea");
     if (input) setTimeout(() => input.focus(), 50);
@@ -142,9 +146,13 @@ export function showInfo(title, text) {
 export function renderCard(cells, opts = {}) {
   const marks = opts.marks || {};
   const rows = [];
+  const cols = colsOf(cells);
   for (let r = 0; r < ROWS; r++) {
-    const idx = rowCells(r);
-    const row = h("div.card-row", { class: opts.highlightRows && opts.highlightRows.has(r) ? "claimed" : "" });
+    const idx = rowCells(r, cols);
+    const row = h("div.card-row", {
+      class: opts.highlightRows && opts.highlightRows.has(r) ? "claimed" : "",
+      style: `grid-template-columns: repeat(${cols}, minmax(0, 1fr))`,
+    });
     for (const i of idx) {
       const c = cells[i] || { t: "e" };
       if (c.t === "e") { row.append(h("div.cell.empty")); continue; }
@@ -258,4 +266,3 @@ export function connectionBadge(online) {
   return online ? null : h("div.offline", "⚠️ Bağlantı yok — tıklamaların kaydediliyor, bağlanınca gönderilecek");
 }
 
-export { COLS };

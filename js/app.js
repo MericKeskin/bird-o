@@ -84,5 +84,27 @@ async function route() {
       h("a.btn.ghost", { href: "#/host" }, "Host girişi")));
 }
 
+// New release check: the running version is in <meta name="app-version">;
+// version.json on the server says what is live. Offer a reload, never force
+// one (it could wipe a prediction being typed; game state is safe in Firebase).
+const runningVersion = document.querySelector('meta[name="app-version"]')?.content;
+let updateShown = false;
+async function checkVersion() {
+  if (!runningVersion || updateShown) return;
+  try {
+    const res = await fetch(`version.json?t=${Date.now()}`, { cache: "no-store" });
+    const { v } = await res.json();
+    if (v && v !== runningVersion) {
+      updateShown = true;
+      document.body.append(h("div.update-bar",
+        h("span", "🆕 Yeni sürüm var"),
+        h("button.btn", { onclick: () => location.reload() }, "Yenile")));
+    }
+  } catch {}
+}
+setInterval(checkVersion, 3 * 60 * 1000);
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") checkVersion(); });
+checkVersion();
+
 addEventListener("hashchange", route);
 route();

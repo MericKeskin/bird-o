@@ -75,3 +75,14 @@ test("claims: other player's row takes cik2 when cik1 is gone; revoked rows are 
   assert.equal(nextClaim("b", cells, marks, {}, { b_0: true }), null);
   assert.equal(nextClaim("b", cells, marks, { cik1: { fid: "a", row: 0 }, cik2: { fid: "c", row: 1 } }), null);
 });
+
+test("Turkish syllable hyphenation", async () => {
+  const { hyphenateTr } = await import("../js/card.js");
+  const show = (s) => hyphenateTr(s).replace(/­/g, "-");
+  assert.equal(show("Kesinlikle"), "Ke-sin-lik-le");
+  assert.equal(show("değiştirir"), "de-ğiş-ti-rir");
+  assert.equal(show("ovuşturur"), "ovuş-tu-rur");
+  assert.equal(show("Türkçe konuşmuyor"), "Türk-çe ko-nuş-mu-yor");
+  assert.equal(show("fotoğrafını çeker"), "fo-toğ-ra-fı-nı çeker");
+  assert.equal(show("Abi şimdi şöyle bi' durum var"), "Abi şimdi şöyle bi' durum var");
+});

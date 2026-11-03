@@ -130,3 +130,24 @@ export function randomId(len = 8) {
   globalThis.crypto.getRandomValues(buf);
   return [...buf].map((x) => abc[x % abc.length]).join("");
 }
+
+// Inserts soft hyphens at Turkish syllable boundaries so long words in narrow
+// cells break as "Ke-sin-lik-le" instead of at a random letter. Turkish
+// syllables are regular: one vowel each; with consonants between two vowels
+// the last consonant starts the next syllable, with none the split is
+// between the vowels.
+const TR_VOWELS = "aeıioöuüâîûAEIİOÖUÜÂÎÛ";
+export function hyphenateTr(text, minWord = 6) {
+  return String(text || "").replace(/\p{L}+/gu, (w) => {
+    if (w.length < minWord) return w;
+    const v = [...w].map((ch, i) => (TR_VOWELS.includes(ch) ? i : -1)).filter((i) => i >= 0);
+    const cuts = [];
+    for (let k = 1; k < v.length; k++) {
+      const cut = v[k] - v[k - 1] > 1 ? v[k] - 1 : v[k];
+      if (cut >= 2 && w.length - cut >= 2) cuts.push(cut);
+    }
+    let out = "", prev = 0;
+    for (const c of cuts) { out += w.slice(prev, c) + "­"; prev = c; }
+    return out + w.slice(prev);
+  });
+}

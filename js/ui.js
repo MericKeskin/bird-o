@@ -1,5 +1,5 @@
 // Small DOM helpers shared by the host and player screens.
-import { cellLabel, rowCells, COLS, ROWS } from "./card.js";
+import { cellLabel, rowCells, hyphenateTr, COLS, ROWS } from "./card.js";
 
 // h("div.card#main", { onclick }, child, "text", [children])
 export function h(tag, attrs, ...children) {
@@ -136,18 +136,14 @@ export function showInfo(title, text) {
 }
 
 // Renders a 3x6 card. opts: { marks, onTap(i), onLong(i), mini, highlightRows:Set }
-// Each row is a fixed grid: filled cells share the width equally, empty cells
-// are thin slots, so widths never depend on the text inside.
+// All 18 cells are equal, like a tombala card; text gets Turkish soft hyphens
+// so long words break at syllables.
 export function renderCard(cells, opts = {}) {
   const marks = opts.marks || {};
   const rows = [];
   for (let r = 0; r < ROWS; r++) {
     const idx = rowCells(r);
-    const cols = idx.map((i) => (cells[i] && cells[i].t !== "e" ? "minmax(0, 1fr)" : "var(--empty-w)")).join(" ");
-    const row = h("div.card-row", {
-      class: opts.highlightRows && opts.highlightRows.has(r) ? "claimed" : "",
-      style: `grid-template-columns: ${cols}`,
-    });
+    const row = h("div.card-row", { class: opts.highlightRows && opts.highlightRows.has(r) ? "claimed" : "" });
     for (const i of idx) {
       const c = cells[i] || { t: "e" };
       if (c.t === "e") { row.append(h("div.cell.empty")); continue; }
@@ -158,7 +154,7 @@ export function renderCard(cells, opts = {}) {
         c.t === "c" && !label ? "blank" : "",
       ].join(" ");
       const cell = h("button.cell", { class: cls, type: "button" },
-        opts.mini ? "" : h("span", label || "✏️ Yaz"));
+        opts.mini ? "" : h("span", label ? hyphenateTr(label) : "✏️ Yaz"));
       if (opts.mini) cell.title = label;
       if (opts.onTap) attachPress(cell, () => opts.onTap(i), opts.onLong && (() => opts.onLong(i)));
       else cell.disabled = true;

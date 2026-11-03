@@ -1,0 +1,59 @@
+{
+  "rules": {
+    "config": {
+      ".read": "auth != null",
+      "hostUid": {
+        ".write": "auth != null && !data.exists() && newData.val() === auth.uid && auth.token.firebase.sign_in_provider === 'google.com'"
+      }
+    },
+    "friends": {
+      ".read": "auth != null && auth.uid === root.child('config/hostUid').val()",
+      ".write": "auth != null && auth.uid === root.child('config/hostUid').val()"
+    },
+    "current": {
+      ".read": "auth != null && auth.uid === root.child('config/hostUid').val()",
+      ".write": "auth != null && auth.uid === root.child('config/hostUid').val()"
+    },
+    "games": {
+      "$gid": {
+        ".read": "auth != null",
+        ".write": "auth != null && auth.uid === root.child('config/hostUid').val()",
+        "seats": {
+          "$fid": {
+            ".write": "auth != null && !data.exists() && newData.val() === auth.uid && root.child('games').child($gid).child('roster').child($fid).exists() && (root.child('games').child($gid).child('meta/status').val() === 'lobby' || (root.child('games').child($gid).child('meta/status').val() === 'playing' && root.child('games').child($gid).child('players').child($fid).child('card').exists()))"
+          }
+        },
+        "online": {
+          "$fid": {
+            ".write": "auth != null && root.child('games').child($gid).child('seats').child($fid).val() === auth.uid"
+          }
+        },
+        "players": {
+          "$fid": {
+            ".write": "auth != null && root.child('games').child($gid).child('seats').child($fid).val() === auth.uid && root.child('games').child($gid).child('meta/status').val() === 'lobby'",
+            "marks": {
+              "$idx": {
+                ".write": "auth != null && root.child('games').child($gid).child('seats').child($fid).val() === auth.uid && root.child('games').child($gid).child('meta/status').val() === 'playing'",
+                ".validate": "newData.isNumber() && root.child('games').child($gid).child('players').child($fid).child('card').child($idx).child('t').val() !== 'e'"
+              }
+            }
+          }
+        },
+        "claims": {
+          "$slot": {
+            ".write": "auth != null && !data.exists() && newData.exists() && root.child('games').child($gid).child('meta/status').val() === 'playing' && root.child('games').child($gid).child('seats').child(newData.child('fid').val()).val() === auth.uid",
+            ".validate": "($slot === 'cik1' || $slot === 'cik2' || $slot === 'birdo') && newData.hasChildren(['fid', 'name', 'row', 'at'])"
+          }
+        },
+        "meta": {
+          "status": {
+            ".write": "auth != null && data.val() === 'playing' && newData.val() === 'finished' && !root.child('games').child($gid).child('claims/birdo').exists() && newData.parent().parent().child('claims/birdo/fid').exists() && root.child('games').child($gid).child('seats').child(newData.parent().parent().child('claims/birdo/fid').val()).val() === auth.uid"
+          },
+          "endedAt": {
+            ".write": "auth != null && !root.child('games').child($gid).child('claims/birdo').exists() && newData.parent().parent().child('claims/birdo/fid').exists() && root.child('games').child($gid).child('seats').child(newData.parent().parent().child('claims/birdo/fid').val()).val() === auth.uid"
+          }
+        }
+      }
+    }
+  }
+}

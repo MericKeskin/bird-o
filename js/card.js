@@ -2,7 +2,7 @@
 // No DOM or Firebase imports, so it runs in Node tests too.
 
 export const ROWS = 3;
-export const COLS = 6;
+export const COLS = 5;
 export const LIST_ITEMS = 7;   // items from the Bird's features (rows 1-2)
 export const CUSTOM_ITEMS = 3; // player-written predictions (row 3)
 export const MIN_FEATURES = LIST_ITEMS;
@@ -22,7 +22,7 @@ function pickColumns(n, rand) {
   return shuffle([...Array(COLS).keys()], rand).slice(0, n).sort((a, b) => a - b);
 }
 
-// items: [{ id, text, short? }]. Returns 18 cells, row-major:
+// items: [{ id, text, short? }]. Returns ROWS*COLS (15) cells, row-major:
 //   { t: "i", id, text, short } list item
 //   { t: "c", text: "" }        custom cell the player fills
 //   { t: "e" }                  empty, not tappable

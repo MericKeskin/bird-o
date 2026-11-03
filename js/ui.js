@@ -66,6 +66,7 @@ export function toast(text, kind = "") {
   }
   const t = h("div.toast", { class: kind }, text);
   box.append(t);
+  while (box.children.length > 3) box.firstChild.remove();
   setTimeout(() => t.classList.add("out"), 3600);
   setTimeout(() => t.remove(), 4000);
 }
@@ -135,8 +136,8 @@ export function showInfo(title, text) {
   return sheet((close) => [h("h3", title), h("p.big-text", text), h("button.btn.wide", { onclick: () => close() }, "Tamam")]);
 }
 
-// Renders a 3x6 card. opts: { marks, onTap(i), onLong(i), mini, highlightRows:Set }
-// All 18 cells are equal, like a tombala card; text gets Turkish soft hyphens
+// Renders a 3x5 card. opts: { marks, onTap(i), onLong(i), mini, highlightRows:Set }
+// All cells are equal, like a tombala card; text gets Turkish soft hyphens
 // so long words break at syllables.
 export function renderCard(cells, opts = {}) {
   const marks = opts.marks || {};

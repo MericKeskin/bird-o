@@ -196,7 +196,7 @@ export function mountPlayer(root, gid, { embedded = false } = {}) {
         })),
         Object.values(seats).length > 0 && h("p.hint",
           "İsmin kilitli 🔒 ama kartın sende değil mi? (Örn. linki başka tarayıcıda açtın.) Host'tan ",
-          h("b", "“Bağlantıyı sıfırla”"), " demesini iste, sonra ismine tekrar dokun."))
+          h("b", "“Linki sıfırla”"), " demesini iste, sonra ismine tekrar dokun."))
     ];
   }
 

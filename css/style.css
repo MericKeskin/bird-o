@@ -12,9 +12,9 @@
   --danger: #f87171;
   --custom: #a78bfa;
   --radius: 14px;
-  --bar-h: 64px;
+  --bar-h: 78px;
   --cell-h: 84px;
-  --cell-font: clamp(10px, 2.9vw, 15px);
+  --cell-font: clamp(11px, 3.3vw, 16px);
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -139,7 +139,7 @@ textarea { resize: vertical; }
 
 /* the card */
 .card { display: flex; flex-direction: column; gap: 4px; background: #f8fafc; border-radius: 14px; padding: 4px; margin: 8px -8px; box-shadow: 0 10px 30px rgba(0,0,0,.35); }
-.card-row { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 3px; border-radius: 9px; }
+.card-row { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 3px; border-radius: 9px; }
 .card-row.claimed { outline: 3px solid var(--gold); outline-offset: 2px; }
 .cell {
   min-width: 0; height: var(--cell-h); border-radius: 9px; border: 0; margin: 0;
@@ -177,7 +177,10 @@ textarea { resize: vertical; }
 /* host player rows */
 .player-row { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 12px; }
 .player-row.ready { border-color: color-mix(in srgb, var(--green) 50%, var(--line)); }
-.pr-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.pr-head { display: flex; align-items: center; gap: 8px; }
+.pr-name { flex: 1; min-width: 0; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pr-head .li-sub { white-space: nowrap; }
+.pr-actions { display: flex; justify-content: flex-end; gap: 6px; margin-top: 8px; }
 .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--line); flex: none; }
 .dot.on { background: var(--green); box-shadow: 0 0 6px var(--green); }
 .dot.away { background: var(--gold); }
@@ -186,7 +189,7 @@ textarea { resize: vertical; }
 .claim-bar {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 6;
   display: flex; gap: 6px; padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
-  background: rgba(15, 23, 42, .96); border-top: 1px solid var(--line); backdrop-filter: blur(6px);
+  background: var(--bg); border-top: 1px solid var(--line); box-shadow: 0 -8px 20px rgba(0,0,0,.35);
 }
 .claim { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 6px 4px; }
 .claim-label { font-size: .72rem; color: var(--muted); white-space: nowrap; }
@@ -209,12 +212,12 @@ textarea { resize: vertical; }
 .sheet .row-btns { margin-top: 8px; }
 .big-text { font-size: 1.15rem; }
 @keyframes up { from { transform: translateY(40px); opacity: 0; } }
-#toasts { position: fixed; top: calc(12px + env(safe-area-inset-top)); left: 12px; right: 12px; z-index: 30; display: flex; flex-direction: column; align-items: center; gap: 8px; pointer-events: none; }
+#toasts { position: fixed; bottom: calc(var(--bar-h) + env(safe-area-inset-bottom) + 10px); left: 12px; right: 12px; z-index: 30; display: flex; flex-direction: column-reverse; align-items: center; gap: 8px; pointer-events: none; }
 .toast { background: #020617; border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; max-width: 480px; box-shadow: 0 8px 24px rgba(0,0,0,.4); transition: opacity .4s, transform .4s; animation: drop .2s ease-out; }
 .toast.big { font-size: 1.1rem; font-weight: 800; border-color: var(--green); }
 .toast.gold { border-color: var(--gold); }
-.toast.out { opacity: 0; transform: translateY(-10px); }
-@keyframes drop { from { transform: translateY(-14px); opacity: 0; } }
+.toast.out { opacity: 0; transform: translateY(10px); }
+@keyframes drop { from { transform: translateY(14px); opacity: 0; } }
 .offline { background: var(--gold); color: #1f1600; text-align: center; font-size: .85rem; font-weight: 700; padding: 6px 12px; position: sticky; top: 0; z-index: 7; }
 .confetti { position: fixed; inset: 0; pointer-events: none; z-index: 25; }
 .spinner { width: 34px; height: 34px; border: 4px solid var(--line); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; }

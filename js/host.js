@@ -234,7 +234,7 @@ export function mountHost(root) {
   }
 
   async function resetSeat(fid, name) {
-    const ok = await confirmSheet(`${name}: bağlantıyı sıfırla`,
+    const ok = await confirmSheet(`${name}: linki sıfırla`,
       "Kartı silinmez. Oyuncu linki açıp ismine tekrar dokununca kartı yeni telefona/tarayıcıya gelir.", "Sıfırla");
     if (ok) { await update(gref(), { [`seats/${fid}`]: null, [`online/${fid}`]: null }); toast(`${name} artık yeniden bağlanabilir`); }
   }
@@ -272,10 +272,11 @@ export function mountHost(root) {
       return h("div.player-row", { class: p && p.ready ? "ready" : "" },
         h("div.pr-head",
           h("span.dot", { class: onl[fid] ? "on" : seated ? "away" : "" , title: onl[fid] ? "Bağlı" : "Bağlı değil" }),
-          h("span.li-title", roster[fid]),
-          h("span.li-sub", status),
-          seated && h("button.btn.small.ghost", { onclick: () => resetSeat(fid, roster[fid]) }, "Bağlantıyı sıfırla"),
-          st === "lobby" && p && h("button.icon", { onclick: () => kick(fid, roster[fid]), "aria-label": "Çıkar" }, "✖")),
+          h("span.pr-name", roster[fid]),
+          h("span.li-sub", status)),
+        seated && h("div.pr-actions",
+          h("button.btn.small.ghost", { onclick: () => resetSeat(fid, roster[fid]) }, "🔄 Linki sıfırla"),
+          st === "lobby" && p && h("button.btn.small.ghost.danger", { onclick: () => kick(fid, roster[fid]) }, "✖ Çıkar")),
         withCards && cells && renderCard(cells, { marks, mini: true, highlightRows: lockedRows(fid, game.claims) }));
     });
   }

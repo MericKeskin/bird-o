@@ -86,3 +86,26 @@ test("Turkish syllable hyphenation", async () => {
   assert.equal(show("fotoğrafını çeker"), "fo-toğ-ra-fı-nı çeker");
   assert.equal(show("Abi şimdi şöyle bi' durum var"), "Abi şimdi şöyle bi' durum var");
 });
+
+test("cards keep their own width: a 3x6 card from an older release still works", async () => {
+  const { colsOf, rowOf } = await import("../js/card.js");
+  const six = generateCard(items, Math.random, 6);
+  const five = generateCard(items);
+  assert.equal(six.length, 18);
+  assert.equal(five.length, 15);
+  assert.equal(colsOf(six), 6);
+  assert.equal(colsOf(five), 5);
+  assert.equal(rowOf(six, 6), 1);
+  assert.equal(rowOf(five, 6), 1);
+  assert.equal(rowOf(five, 5), 1);
+  for (const cells of [six, five]) {
+    const cols = colsOf(cells);
+    const row = (r) => cells.slice(r * cols, r * cols + cols);
+    assert.equal(row(0).filter((c) => c.t === "i").length + row(1).filter((c) => c.t === "i").length, 7);
+    assert.equal(row(2).filter((c) => c.t === "c").length, 3);
+    const marks = {};
+    cells.forEach((c, i) => { if (c.t !== "e" && rowOf(cells, i) === 2) marks[i] = 1; });
+    assert.ok(rowComplete(cells, marks, 2));
+    assert.ok(!rowComplete(cells, marks, 0));
+  }
+});

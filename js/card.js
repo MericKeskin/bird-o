@@ -18,28 +18,38 @@ function shuffle(arr, rand) {
   return a;
 }
 
-function pickColumns(n, rand) {
-  return shuffle([...Array(COLS).keys()], rand).slice(0, n).sort((a, b) => a - b);
+function pickColumns(n, cols, rand) {
+  return shuffle([...Array(cols).keys()], rand).slice(0, n).sort((a, b) => a - b);
 }
 
-// items: [{ id, text, short? }]. Returns ROWS*COLS (15) cells, row-major:
+// A card's width comes from the card itself (cells / 3), never from the code
+// version on the phone, so cards made by an older release still line up.
+export function colsOf(cells) {
+  return Math.round(((cells && cells.length) || ROWS * COLS) / ROWS);
+}
+
+export function rowOf(cells, i) {
+  return Math.floor(i / colsOf(cells));
+}
+
+// items: [{ id, text, short? }]. Returns ROWS*cols cells (15 by default), row-major:
 //   { t: "i", id, text, short } list item
 //   { t: "c", text: "" }        custom cell the player fills
 //   { t: "e" }                  empty, not tappable
-export function generateCard(items, rand = Math.random) {
+export function generateCard(items, rand = Math.random, cols = COLS) {
   if (items.length < LIST_ITEMS) throw new Error(`En az ${LIST_ITEMS} özellik gerekli`);
   const picked = shuffle(items, rand).slice(0, LIST_ITEMS);
   const firstRow = rand() < 0.5 ? 3 : 4;
   const perRow = [firstRow, LIST_ITEMS - firstRow, CUSTOM_ITEMS];
-  const cells = Array.from({ length: ROWS * COLS }, () => ({ t: "e" }));
+  const cells = Array.from({ length: ROWS * cols }, () => ({ t: "e" }));
   let next = 0;
   perRow.forEach((count, r) => {
-    for (const c of pickColumns(count, rand)) {
+    for (const c of pickColumns(count, cols, rand)) {
       if (r < 2) {
         const it = picked[next++];
-        cells[r * COLS + c] = { t: "i", id: it.id, text: it.text, short: it.short || "" };
+        cells[r * cols + c] = { t: "i", id: it.id, text: it.text, short: it.short || "" };
       } else {
-        cells[r * COLS + c] = { t: "c", text: "" };
+        cells[r * cols + c] = { t: "c", text: "" };
       }
     }
   });
@@ -76,12 +86,12 @@ export function customsFilled(cells) {
   return cells.filter((c) => c.t === "c").every((c) => String(c.text || "").trim());
 }
 
-export function rowCells(r) {
-  return [...Array(COLS).keys()].map((c) => r * COLS + c);
+export function rowCells(r, cols = COLS) {
+  return [...Array(cols).keys()].map((c) => r * cols + c);
 }
 
 export function filledInRow(cells, r) {
-  return rowCells(r).filter((i) => cells[i] && cells[i].t !== "e");
+  return rowCells(r, colsOf(cells)).filter((i) => cells[i] && cells[i].t !== "e");
 }
 
 export function rowComplete(cells, marks, r) {

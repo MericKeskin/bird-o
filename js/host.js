@@ -2,7 +2,7 @@
 import {
   auth, db, ref, get, set, update, remove, push, onValue, serverTimestamp, signOut,
 } from "./firebase.js";
-import { MIN_FEATURES, SLOTS, cellLabel, lockedRows, randomId } from "./card.js";
+import { MIN_FEATURES, SLOTS, COLS, cellLabel, lockedRows, randomId } from "./card.js";
 import {
   h, mount, toast, confirmSheet, promptSheet, renderCard, claimBar, showClaim, fmtTime,
   SLOT_LABEL, SLOT_ICON,
@@ -162,7 +162,7 @@ export function mountHost(root) {
     const gid = randomId(8);
     await update(ref(db), {
       [`games/${gid}`]: {
-        meta: { status: "lobby", birdId, birdName: bird.name, hostUid: user.uid, createdAt: serverTimestamp() },
+        meta: { status: "lobby", birdId, birdName: bird.name, hostUid: user.uid, cols: COLS, createdAt: serverTimestamp() },
         roster, items,
       },
       current: gid,
@@ -273,10 +273,9 @@ export function mountHost(root) {
         h("div.pr-head",
           h("span.dot", { class: onl[fid] ? "on" : seated ? "away" : "" , title: onl[fid] ? "Bağlı" : "Bağlı değil" }),
           h("span.pr-name", roster[fid]),
-          h("span.li-sub", status)),
-        seated && h("div.pr-actions",
-          h("button.btn.small.ghost", { onclick: () => resetSeat(fid, roster[fid]) }, "🔄 Linki sıfırla"),
-          st === "lobby" && p && h("button.btn.small.ghost.danger", { onclick: () => kick(fid, roster[fid]) }, "✖ Çıkar")),
+          h("span.li-sub", status),
+          seated && h("button.icon", { onclick: () => resetSeat(fid, roster[fid]), "aria-label": "Linki sıfırla", title: "Linki sıfırla" }, "🔄"),
+          st === "lobby" && p && h("button.icon.danger", { onclick: () => kick(fid, roster[fid]), "aria-label": "Çıkar", title: "Çıkar" }, "✖")),
         withCards && cells && renderCard(cells, { marks, mini: true, highlightRows: lockedRows(fid, game.claims) }));
     });
   }
@@ -328,8 +327,8 @@ export function mountHost(root) {
           showQr && qrBox(url)),
         h("h4", joined.length ? `Oyuncular — ${readyCount}/${joined.length} hazır` : "Oyuncular — henüz kimse katılmadı"),
         h("div.list", playerRows(false)),
-        h("p.hint", "Sen de oynuyorsan “Kartım” sekmesinden ismini seç ve kartını doldur."),
-        h("button.btn.wide.go", { disabled: !allReady, onclick: startGame },
+        h("p.hint", "Sen de oynuyorsan “Kartım” sekmesinden ismini seç ve kartını doldur. 🔄 = linki sıfırla (oyuncu başka tarayıcıda açtıysa), ✖ = çıkar."),
+        h("button.btn.wide.go.sticky-cta", { disabled: !allReady, onclick: startGame },
           allReady ? `🎬 Oyunu başlat (${joined.length} oyuncu)` : joined.length ? "Herkesin hazır olması bekleniyor…" : "Oyuncu bekleniyor…"),
         h("button.btn.ghost.danger.wide", { onclick: stopGame }, "Oyunu iptal et"));
     }

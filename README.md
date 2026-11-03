@@ -42,6 +42,10 @@ Plain HTML/CSS/JS with no build step.
 | `vendor/` | Firebase SDK v13 + qrcode-generator, bundled with esbuild |
 | `database.rules.json` | Security rules |
 
+### Releasing
+
+Before merging a change to `main`, run `node scripts/bump-version.mjs`. It stamps a new version into `index.html` (all script and stylesheet URLs) and `version.json`, so phones never mix cached old files with new ones. Phones with the page already open show a **"Yeni sürüm var — Yenile"** banner. The version test fails if you forget.
+
 ### Tests
 
 ```sh

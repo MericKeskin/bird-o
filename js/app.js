@@ -96,7 +96,7 @@ async function checkVersion() {
     const { v } = await res.json();
     if (v && v !== runningVersion) {
       updateShown = true;
-      document.body.append(h("div.update-bar",
+      document.body.prepend(h("div.update-bar",
         h("span", "🆕 Yeni sürüm var"),
         h("button.btn", { onclick: () => location.reload() }, "Yenile")));
     }

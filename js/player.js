@@ -4,7 +4,7 @@ import {
 } from "./firebase.js";
 import {
   generateCard, validateCustom, customsFilled, nextClaim, lockedRows, filledInRow,
-  cellLabel, rowOf, COLS, MAX_CUSTOM_LEN, SLOTS,
+  cellLabel, rowOf, colsOf, COLS, MAX_CUSTOM_LEN, SLOTS,
 } from "./card.js";
 import {
   h, mount, toast, vibrate, confirmSheet, promptSheet, showInfo, renderCard, claimBar,
@@ -133,6 +133,27 @@ export function mountPlayer(root, gid, { embedded = false } = {}) {
     }
   }
 
+  // A card made by an outdated page (e.g. a tab left open across a release)
+  // can have the wrong width. While still in the lobby, rebuild it at the
+  // game's width and keep the player's predictions.
+  let repairing = false;
+  async function repairCard(fid, p, cols) {
+    if (repairing) return;
+    repairing = true;
+    try {
+      const items = Object.entries(game.items || {}).map(([id, it]) => ({ id, ...it }));
+      const cells = generateCard(items, Math.random, cols);
+      const texts = p.card.filter((c) => c.t === "c").map((c) => c.text || "");
+      cells.filter((c) => c.t === "c").forEach((c, k) => { c.text = texts[k] || ""; });
+      await set(ref(db, `${gpath}/players/${fid}/card`), cells);
+      toast("Kartın güncel düzene göre yenilendi");
+    } catch (e) {
+      console.error(e);
+    } finally {
+      repairing = false;
+    }
+  }
+
   async function editCustom(fid, i) {
     const cells = game.players[fid].card;
     const v = await promptSheet({
@@ -209,12 +230,15 @@ export function mountPlayer(root, gid, { embedded = false } = {}) {
 
     const p = game.players && game.players[fid];
     if (!p) {
-      if (game.meta.status === "lobby") createCard(fid).catch(() => {});
+      // Deferred: Firebase fires local updates synchronously, and writing
+      // during render() would let this render overwrite the newer one.
+      if (game.meta.status === "lobby") setTimeout(() => createCard(fid).catch(() => {}));
       return mount(root, header(), h("main.center", h("div.spinner"), h("p.muted", "Kartın hazırlanıyor…")));
     }
 
     const st = game.meta.status;
     const cells = p.card;
+    if (st === "lobby" && game.meta.cols && colsOf(cells) !== game.meta.cols) setTimeout(() => repairCard(fid, p, game.meta.cols));
     const marks = p.marks || {};
     const claims = game.claims || {};
     const filled = cells.filter((c) => c.t !== "e").length;

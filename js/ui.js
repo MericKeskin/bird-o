@@ -74,10 +74,23 @@ export function toast(text, kind = "") {
 export function sheet(build) {
   return new Promise((resolve) => {
     const back = h("div.backdrop");
-    const close = (v) => { back.remove(); resolve(v); };
+    // Keep the sheet inside the visible area when the on-screen keyboard is
+    // open (iOS shrinks visualViewport instead of the layout viewport).
+    const vv = window.visualViewport;
+    const fit = () => {
+      if (!vv) return;
+      back.style.height = vv.height + "px";
+      back.style.transform = `translateY(${vv.offsetTop}px)`;
+    };
+    const close = (v) => {
+      if (vv) { vv.removeEventListener("resize", fit); vv.removeEventListener("scroll", fit); }
+      back.remove();
+      resolve(v);
+    };
     back.addEventListener("click", (e) => { if (e.target === back) close(null); });
     back.append(h("div.sheet", build(close)));
     document.body.append(back);
+    if (vv) { vv.addEventListener("resize", fit); vv.addEventListener("scroll", fit); fit(); }
     const input = back.querySelector("input,textarea");
     if (input) setTimeout(() => input.focus(), 50);
   });
@@ -108,7 +121,9 @@ export function promptSheet({ title, value = "", placeholder = "", maxLength = 2
     if (!multiline) input.addEventListener("keydown", (e) => { if (e.key === "Enter") submit(); });
     return [
       h("h3", title),
-      input, err,
+      input,
+      !multiline && h("p.hint.tight", "Klavyede ", h("b", "Bitti / Return"), " ile de kaydedebilirsin."),
+      err,
       h("div.row-btns",
         h("button.btn.ghost", { onclick: () => close(null) }, "Vazgeç"),
         h("button.btn", { onclick: submit }, okLabel)),
@@ -120,18 +135,20 @@ export function showInfo(title, text) {
   return sheet((close) => [h("h3", title), h("p.big-text", text), h("button.btn.wide", { onclick: () => close() }, "Tamam")]);
 }
 
-function sizeClass(text) {
-  const n = text.length;
-  return n > 34 ? "xs" : n > 22 ? "sm" : n > 12 ? "md" : "lg";
-}
-
 // Renders a 3x6 card. opts: { marks, onTap(i), onLong(i), mini, highlightRows:Set }
+// Each row is a fixed grid: filled cells share the width equally, empty cells
+// are thin slots, so widths never depend on the text inside.
 export function renderCard(cells, opts = {}) {
   const marks = opts.marks || {};
   const rows = [];
   for (let r = 0; r < ROWS; r++) {
-    const row = h("div.card-row", { class: opts.highlightRows && opts.highlightRows.has(r) ? "claimed" : "" });
-    for (const i of rowCells(r)) {
+    const idx = rowCells(r);
+    const cols = idx.map((i) => (cells[i] && cells[i].t !== "e" ? "minmax(0, 1fr)" : "var(--empty-w)")).join(" ");
+    const row = h("div.card-row", {
+      class: opts.highlightRows && opts.highlightRows.has(r) ? "claimed" : "",
+      style: `grid-template-columns: ${cols}`,
+    });
+    for (const i of idx) {
       const c = cells[i] || { t: "e" };
       if (c.t === "e") { row.append(h("div.cell.empty")); continue; }
       const label = cellLabel(c);
@@ -139,10 +156,9 @@ export function renderCard(cells, opts = {}) {
         c.t === "c" ? "custom" : "item",
         marks[i] ? "on" : "",
         c.t === "c" && !label ? "blank" : "",
-        opts.mini ? "" : sizeClass(label || "✏️ Tahminini yaz"),
       ].join(" ");
       const cell = h("button.cell", { class: cls, type: "button" },
-        opts.mini ? "" : h("span", label || "✏️ Tahminini yaz"));
+        opts.mini ? "" : h("span", label || "✏️ Yaz"));
       if (opts.mini) cell.title = label;
       if (opts.onTap) attachPress(cell, () => opts.onTap(i), opts.onLong && (() => opts.onLong(i)));
       else cell.disabled = true;

@@ -46,7 +46,7 @@ export function mountHost(root) {
   ];
 
   const gref = (p = "") => ref(db, `games/${currentId}${p ? "/" + p : ""}`);
-  const setTab = (t) => { tab = t; sessionStorage.setItem("birdo:tab", t); render(); };
+  const setTab = (t) => { tab = t; sessionStorage.setItem("birdo:tab", t); render(); scrollTo(0, 0); };
 
   // ---------- Friends ----------
   async function addFriend(input) {
@@ -169,6 +169,7 @@ export function mountHost(root) {
     });
     showNewForm = false;
     showQr = true;
+    scrollTo(0, 0);
     toast("Oyun oluşturuldu 🎉 Linki paylaş!");
   }
 
@@ -324,7 +325,7 @@ export function mountHost(root) {
             h("button.btn.ghost", { onclick: () => copy(url) }, "📋 Kopyala"),
             h("button.btn.ghost", { onclick: () => { showQr = !showQr; render(); } }, showQr ? "QR gizle" : "QR")),
           showQr && qrBox(url)),
-        h("h4", `Oyuncular — ${readyCount}/${joined.length} hazır`),
+        h("h4", joined.length ? `Oyuncular — ${readyCount}/${joined.length} hazır` : "Oyuncular — henüz kimse katılmadı"),
         h("div.list", playerRows(false)),
         h("p.hint", "Sen de oynuyorsan “Kartım” sekmesinden ismini seç ve kartını doldur."),
         h("button.btn.wide.go", { disabled: !allReady, onclick: startGame },
@@ -382,12 +383,12 @@ export function mountHost(root) {
         h("button.tab", { class: tab === k ? "active" : "", onclick: () => setTab(k) }, label)));
     const showBar = tab === "game" && game && !showNewForm && game.meta.status !== "lobby";
     mount(root,
-      h("header.top",
+      h("div.sticky-top", h("header.top",
         h("div.logo", "🐦 Bird'O ", h("small", "host")),
         h("button.link.small", {
           onclick: async () => { if (await confirmSheet("Çıkış yap?", null, "Çıkış")) { await signOut(auth); location.hash = "#/"; } },
         }, "Çıkış")),
-      tabs, body, showBar && claimBar(game.claims || {}, showClaim));
+      tabs), body, showBar && claimBar(game.claims || {}, showClaim));
   }
 
   render();
